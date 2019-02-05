@@ -68,6 +68,7 @@ import com.naman14.timberx.models.MediaID
 import com.naman14.timberx.models.MediaID.Companion.CALLER_OTHER
 import com.naman14.timberx.models.MediaID.Companion.CALLER_SELF
 import com.naman14.timberx.models.Song
+import com.naman14.timberx.notifications.Notifications
 import com.naman14.timberx.repository.AlbumRepository.getAllAlbums
 import com.naman14.timberx.repository.AlbumRepository.getSongsForAlbum
 import com.naman14.timberx.repository.ArtistRepository.getAllArtists
@@ -97,9 +98,6 @@ import com.naman14.timberx.util.Constants.SHUFFLE_MODE
 import com.naman14.timberx.util.Constants.SONG
 import com.naman14.timberx.util.MusicUtils
 import com.naman14.timberx.util.MusicUtils.getSongUri
-import com.naman14.timberx.util.NotificationUtils
-import com.naman14.timberx.util.NotificationUtils.buildNotification
-import com.naman14.timberx.util.NotificationUtils.updateNotification
 import com.naman14.timberx.util.Utils
 import com.naman14.timberx.util.Utils.EMPTY_ALBUM_ART_URI
 import com.naman14.timberx.util.doAsync
@@ -112,6 +110,7 @@ import com.naman14.timberx.util.extensions.toIDList
 import com.naman14.timberx.util.extensions.toQueue
 import com.naman14.timberx.util.extensions.toRawMediaItems
 import com.naman14.timberx.util.extensions.toSongIDs
+import org.koin.android.ext.android.inject
 import java.util.Random
 import timber.log.Timber.d as log
 
@@ -137,6 +136,8 @@ class TimberMusicService : MediaBrowserServiceCompat(), MediaPlayer.OnPreparedLi
 
         const val NOTIFICATION_ID = 888
     }
+
+    private val notifications by inject<Notifications>()
 
     private var mCurrentSongId: Long = -1
     private var isPlaying = false
@@ -285,7 +286,7 @@ class TimberMusicService : MediaBrowserServiceCompat(), MediaPlayer.OnPreparedLi
             override fun onStop() {
                 player?.stop()
                 setPlaybackState(mStateBuilder.setState(STATE_NONE, 0, 1F).build())
-                NotificationUtils.updateNotification(this@TimberMusicService, mMediaSession)
+                notifications.updateNotification(mMediaSession)
                 stopService()
             }
 
@@ -407,7 +408,7 @@ class TimberMusicService : MediaBrowserServiceCompat(), MediaPlayer.OnPreparedLi
         }
         setPlaybackState(mStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
                 mMediaSession.position(), 1F).build())
-        NotificationUtils.updateNotification(this, mMediaSession)
+        notifications.updateNotification(mMediaSession)
     }
 
     override fun onCompletion(player: MediaPlayer?) {
@@ -737,7 +738,7 @@ class TimberMusicService : MediaBrowserServiceCompat(), MediaPlayer.OnPreparedLi
             player?.pause()
             setPlaybackState(mStateBuilder.setState(STATE_PAUSED,
                     mMediaSession.position(), 1F).build())
-            NotificationUtils.updateNotification(this, mMediaSession)
+            notifications.updateNotification(mMediaSession)
             stopForeground(false)
             saveCurrentData()
         }

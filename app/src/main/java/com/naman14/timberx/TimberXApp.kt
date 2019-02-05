@@ -18,8 +18,10 @@ package com.naman14.timberx
 
 import android.app.Application
 import com.naman14.timberx.BuildConfig.DEBUG
-import com.naman14.timberx.util.logging.FabricTree
 import com.naman14.timberx.network.DataHandler
+import com.naman14.timberx.notifications.notificationModule
+import com.naman14.timberx.util.logging.FabricTree
+import org.koin.android.ext.android.startKoin
 import timber.log.Timber
 
 class TimberXApp : Application() {
@@ -32,5 +34,13 @@ class TimberXApp : Application() {
             Timber.plant(Timber.DebugTree())
         }
         Timber.plant(FabricTree())
+
+        val modules = listOf(
+                notificationModule
+        )
+        startKoin(
+                androidContext = this,
+                modules = modules
+        )
     }
 }
